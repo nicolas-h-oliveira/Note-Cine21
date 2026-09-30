@@ -1,0 +1,392 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Detalhes — Note Cine</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="theme.css">
+</head>
+<body>
+
+    <header class="site-header">
+        <div class="header-left">
+            <button type="button" class="nav-back" onclick="goBack()"><i class="fa-solid fa-arrow-left"></i> Voltar</button>
+            <a href="index.html" class="brand"><i class="fa-solid fa-clapperboard"></i> Note <em>Cine</em></a>
+        </div>
+        <div class="header-right">
+            <button type="button" class="theme-toggle-btn" id="theme-toggle" title="Alternar modo claro/escuro"><i class="fa-solid fa-moon"></i></button>
+            <a href="favoritos.html" class="btn-ghost"><i class="fa-solid fa-heart"></i> Favoritos</a>
+            <a href="perfil.html" class="user-btn" id="user-avatar-btn" title="Perfil">U</a>
+        </div>
+    </header>
+
+    <section class="movie-page-hero" id="movie-hero">
+        <div class="movie-page-inner">
+            <img src="" alt="" class="movie-poster" id="movie-poster" hidden>
+            <div class="movie-main">
+                <h1 id="movie-title">Carregando…</h1>
+                <div class="movie-meta-row" id="movie-meta"></div>
+
+                <p class="hero-desc" id="movie-tagline"></p>
+                <h2 class="section-title" style="font-size:18px;margin-bottom:10px;">Sinopse</h2>
+                <p class="hero-desc" id="movie-overview"></p>
+
+                <div class="movie-actions-row">
+                    <button type="button" class="btn-primary" id="btn-fav"><i class="fa-solid fa-heart"></i> Adicionar aos Favoritos</button>
+                    <button type="button" class="btn-secondary" id="btn-profile"><i class="fa-solid fa-bookmark"></i> Adicionar ao Perfil</button>
+                    <button type="button" class="btn-secondary btn-gold" id="btn-review"><i class="fa-solid fa-pen-nib"></i> Escrever Crítica</button>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <main class="container-narrow">
+        <h2 class="section-title"><i class="fa-solid fa-users"></i> Elenco principal</h2>
+        <div class="cast-row" id="cast-row"></div>
+
+        <section class="reviews-section">
+            <div class="section-head">
+                <h2 class="section-title"><i class="fa-solid fa-message"></i> Críticas <span class="tag tag-gold" id="reviews-count">0</span></h2>
+                <button type="button" class="btn-secondary" id="btn-write-review"><i class="fa-solid fa-pen"></i> Escrever Crítica</button>
+            </div>
+            <div class="reviews-list" id="reviews-list"></div>
+        </section>
+    </main>
+
+    <footer class="site-footer">
+        <p>&copy; 2026 Note Cine — Dados TMDB.</p>
+    </footer>
+
+    <!-- MODAL: ESCREVER CRÍTICA -->
+    <div class="modal-overlay" id="modal-review">
+        <div class="modal-content">
+            <button type="button" class="btn-close-modal" onclick="closeReviewModal()"><i class="fa-solid fa-xmark"></i></button>
+            <h3 style="color:var(--nc-white);margin-bottom:6px;" id="review-modal-title">Escrever Crítica</h3>
+            <p style="color:var(--nc-grey);font-size:12px;margin-bottom:16px;">Compartilhe sua opinião sobre este título.</p>
+            <input type="hidden" id="review-id">
+            <div class="form-group">
+                <label>Título da crítica</label>
+                <input type="text" id="review-title" maxlength="80" placeholder="Ex.: Uma obra-prima do cinema">
+            </div>
+            <div class="form-group">
+                <label>Sua nota (0 a 10)</label>
+                <input type="range" id="review-rating" min="0" max="10" step="0.5" value="7.5">
+                <div class="rating-display" id="review-rating-display">7.5 / 10</div>
+            </div>
+            <div class="form-group">
+                <label>Texto da crítica</label>
+                <textarea id="review-text" rows="5" maxlength="1000" placeholder="Conte sua experiência, pontos fortes e fracos..."></textarea>
+            </div>
+            <button type="button" class="btn-submit" onclick="submitReview()"><i class="fa-solid fa-paper-plane"></i> Publicar Crítica</button>
+        </div>
+    </div>
+
+    <div id="toast-notification" role="status"></div>
+
+    <script src="js/plans.js"></script>
+    <script src="js/config.js"></script>
+    <script src="js/api.js"></script>
+    <script src="js/theme.js"></script>
+    <script src="js/storage.js"></script>
+    <script src="js/components.js"></script>
+    <script src="script.js"></script>
+    
+    <script>
+        let currentItem = null;
+        let currentUser = null;
+
+        function esc(str) {
+            return String(str ?? '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+        }
+
+        document.addEventListener('DOMContentLoaded', async () => {
+            currentUser = requireAuth();
+            if (!currentUser) return;
+            const avatarBtn = document.getElementById('user-avatar-btn');
+            avatarBtn.textContent = currentUser.username.charAt(0).toUpperCase();
+            const savedAvatar = localStorage.getItem(`cineaura_avatar_${currentUser.username}`);
+            if (savedAvatar) {
+                avatarBtn.textContent = '';
+                avatarBtn.style.backgroundImage = `url(${savedAvatar})`;
+            }
+
+            // Inicializa o botão de alternar tema
+            const themeToggleBtn = document.getElementById('theme-toggle');
+            if (themeToggleBtn) {
+                function updateThemeIcon() {
+                    const currentTheme = ThemeManager.getEffectiveTheme();
+                    const icon = themeToggleBtn.querySelector('i');
+                    icon.className = currentTheme === 'dark' ? 'fa-solid fa-moon' : 'fa-solid fa-sun';
+                }
+                themeToggleBtn.addEventListener('click', () => {
+                    ThemeManager.toggleTheme();
+                    updateThemeIcon();
+                });
+                window.addEventListener('themechange', updateThemeIcon);
+                updateThemeIcon();
+            }
+
+            const params = new URLSearchParams(window.location.search);
+            let id = params.get('id');
+            let type = params.get('type') === 'tv' ? 'tv' : 'movie';
+            
+            // Remove composite ID prefix if present (e.g., "movie:550" → "550")
+            if (id && id.includes(':')) {
+                const parts = id.split(':');
+                type = parts[0]; // Take type from composite ID
+                id = parts[1];   // Take numeric ID
+            }
+            
+            if (!id) {
+                window.location.href = 'index.html';
+                return;
+            }
+
+            await loadDetails(id, type);
+            bindActions();
+            bindReviewControls();
+        });
+
+        async function loadDetails(id, type) {
+            try {
+                const path = type === 'tv' ? `/tv/${id}` : `/movie/${id}`;
+                const creditsPath = type === 'tv' ? `/tv/${id}/credits` : `/movie/${id}/credits`;
+                const [details, credits] = await Promise.all([
+                    tmdbFetch(buildUrl(path, { append_to_response: 'videos' })),
+                    tmdbFetch(buildUrl(creditsPath))
+                ]);
+
+                currentItem = { ...details, media_type: type };
+                const title = details.title || details.name;
+                document.title = `${title} — Note Cine`;
+
+                const poster = document.getElementById('movie-poster');
+                if (details.poster_path) {
+                    poster.src = posterUrl(details.poster_path);
+                    poster.alt = title;
+                    poster.hidden = false;
+                }
+
+                const backdrop = details.backdrop_path || details.poster_path;
+                if (backdrop) {
+                    document.getElementById('movie-hero').style.backgroundImage =
+                        `url('${CINEAURA.IMG_W780}${backdrop}')`;
+                }
+
+                document.getElementById('movie-title').textContent = title;
+                const year = extractYear(details.release_date || details.first_air_date) || '—';
+                const runtime = formatRuntime(details.runtime || details.episode_run_time?.[0]);
+                const rating = details.vote_average ? details.vote_average.toFixed(1) : 'N/A';
+                document.getElementById('movie-meta').innerHTML = `
+                    <span class="movie-score"><i class="fa-solid fa-star"></i> ${rating}</span>
+                    <span>${year}</span>
+                    ${runtime ? `<span>${runtime}</span>` : ''}
+                    <span>${type === 'tv' ? 'Série' : 'Filme'}</span>
+                `;
+
+                document.getElementById('movie-tagline').textContent = details.tagline || '';
+                document.getElementById('movie-overview').textContent = details.overview || 'Sinopse indisponível.';
+
+                const castRow = document.getElementById('cast-row');
+                const cast = (credits.cast || []).slice(0, 12);
+                castRow.innerHTML = cast.map(person => `
+                    <div class="cast-card">
+                        <img src="${person.profile_path ? posterUrl(person.profile_path, 'w342') : posterUrl(null)}" alt="${esc(person.name)}" loading="lazy">
+                        <p><strong>${esc(person.name)}</strong><br>${esc(person.character || '')}</p>
+                    </div>
+                `).join('') || '<p style="color:var(--nc-grey);">Elenco não disponível.</p>';
+
+                await updateActionButtons();
+                await renderReviews();
+            } catch (e) {
+                console.error(e);
+                document.getElementById('movie-title').textContent = 'Erro ao carregar título';
+                document.getElementById('movie-overview').textContent = 'Tente novamente mais tarde.';
+            }
+        }
+
+        async function updateActionButtons() {
+            if (!currentItem) return;
+            const favBtn = document.getElementById('btn-fav');
+            const profileBtn = document.getElementById('btn-profile');
+            
+            try {
+                // Checa no banco de dados se já está favoritado ou no perfil
+                // Passa também o media_type para identificar corretamente o conteúdo
+                const req = await fetch(`api.php?action=check_movie_status&movie_id=${encodeURIComponent(currentItem.id)}&media_type=${encodeURIComponent(currentItem.media_type)}`);
+                const res = await req.json();
+                
+                const isFav = res.is_favorite;
+                const inProfile = res.in_profile;
+
+                favBtn.classList.toggle('is-active-fav', isFav);
+                favBtn.innerHTML = isFav
+                    ? '<i class="fa-solid fa-heart"></i> Remover dos Favoritos'
+                    : '<i class="fa-solid fa-heart"></i> Adicionar aos Favoritos';
+
+                profileBtn.classList.toggle('is-active-profile', inProfile);
+                profileBtn.innerHTML = inProfile
+                    ? '<i class="fa-solid fa-bookmark"></i> Remover do Perfil'
+                    : '<i class="fa-solid fa-bookmark"></i> Adicionar ao Perfil';
+            } catch (error) {
+                console.error("Erro ao verificar status dos botões:", error);
+            }
+        }
+
+        function bindActions() {
+            // AÇÃO: FAVORITOS
+            document.getElementById('btn-fav').addEventListener('click', async () => {
+                if (!currentItem) return;
+                try {
+                    const result = await Storage.toggleFavorite(currentItem);
+                    if (result.ok) {
+                        showToast(result.msg, 'success');
+                        await updateActionButtons();
+                    } else {
+                        showToast(result.msg || 'Erro ao favoritar.', 'error');
+                    }
+                } catch(e) {
+                    showToast('Erro ao se conectar com o servidor.', 'error');
+                }
+            });
+
+            // AÇÃO: ADICIONAR/REMOVER DO PERFIL
+            document.getElementById('btn-profile').addEventListener('click', async () => {
+                if (!currentItem) return;
+                try {
+                    const result = await Storage.toggleProfileMovie(currentItem);
+                    if (result.ok) {
+                        showToast(result.msg, 'success');
+                        await updateActionButtons();
+                    } else {
+                        showToast(result.msg || 'Erro ao modificar perfil.', 'error');
+                    }
+                } catch(e) {
+                    showToast('Erro ao se conectar com o servidor.', 'error');
+                }
+            });
+
+            document.getElementById('btn-write-review')?.addEventListener('click', () => openReviewModal());
+            document.getElementById('btn-review')?.addEventListener('click', () => openReviewModal());
+        }
+
+        /* ---------- CRÍTICAS ---------- */
+        function bindReviewControls() {
+            document.getElementById('review-rating').addEventListener('input', (e) => {
+                const val = parseFloat(e.target.value).toFixed(1);
+                document.getElementById('review-rating-display').textContent = `${val} / 10`;
+            });
+        }
+
+        function formatReviewDate(iso) {
+            try {
+                return new Date(iso).toLocaleDateString('pt-BR', { day: '2-digit', month: 'short', year: 'numeric' });
+            } catch {
+                return '';
+            }
+        }
+
+        async function renderReviews() {
+            if (!currentItem) return;
+            const list = document.getElementById('reviews-list');
+            const reviews = await Storage.getMovieReviews(currentItem.id, currentItem.media_type);
+            document.getElementById('reviews-count').textContent = reviews.length;
+
+            if (!reviews.length) {
+                list.innerHTML = '<p class="empty-msg" style="grid-column:1/-1;color:var(--nc-grey);">Nenhuma crítica ainda. Seja o primeiro a comentar!</p>';
+                return;
+            }
+
+            list.innerHTML = reviews.map(r => `
+                <article class="review-card ${r.username === currentUser.username ? 'own' : ''}">
+                    <div class="review-head">
+                        <div class="review-user">
+                            <div class="review-avatar">${esc(r.username.charAt(0).toUpperCase())}</div>
+                            <div>
+                                <strong>${esc(r.username)}</strong>
+                                <span class="review-date"><i class="fa-solid fa-calendar"></i> ${formatReviewDate(r.date)}</span>
+                            </div>
+                        </div>
+                        <span class="review-rating"><i class="fa-solid fa-star"></i> ${Number(r.rating).toFixed(1)}</span>
+                    </div>
+                    <h4>${esc(r.title)}</h4>
+                    <p>${esc(r.text)}</p>
+                    ${r.username === currentUser.username ? `
+                        <div class="review-actions">
+                            <button type="button" class="btn-mini" onclick="openReviewModal('${r.id}')"><i class="fa-solid fa-pen"></i> Editar</button>
+                            <button type="button" class="btn-mini btn-danger" onclick="removeReview('${r.id}')"><i class="fa-solid fa-trash"></i> Excluir</button>
+                        </div>` : ''}
+                </article>
+            `).join('');
+        }
+
+        async function openReviewModal(reviewId) {
+            if (!currentItem) return;
+            document.getElementById('review-id').value = reviewId || '';
+            document.getElementById('review-title').value = '';
+            document.getElementById('review-text').value = '';
+            document.getElementById('review-rating').value = 7.5;
+            document.getElementById('review-rating-display').textContent = '7.5 / 10';
+            document.getElementById('review-modal-title').textContent = reviewId ? 'Editar Crítica' : 'Escrever Crítica';
+
+            if (reviewId) {
+                const reviews = await Storage.getReviews();
+                const review = reviews.find(r => r.id === reviewId);
+                if (review && review.username === currentUser.username) {
+                    document.getElementById('review-title').value = review.title;
+                    document.getElementById('review-text').value = review.text;
+                    document.getElementById('review-rating').value = review.rating;
+                    document.getElementById('review-rating-display').textContent = `${Number(review.rating).toFixed(1)} / 10`;
+                }
+            }
+            document.getElementById('modal-review').style.display = 'flex';
+        }
+
+        function closeReviewModal() {
+            document.getElementById('modal-review').style.display = 'none';
+        }
+
+        async function submitReview() {
+            if (!currentItem) return;
+            const title = document.getElementById('review-title').value;
+            const text = document.getElementById('review-text').value;
+            const rating = document.getElementById('review-rating').value;
+            const id = document.getElementById('review-id').value;
+
+            let result;
+            if (id) {
+                result = await Storage.updateReview(id, title, text, rating);
+            } else {
+                result = await Storage.addReview(currentItem.id, currentItem.media_type, title, text, rating);
+            }
+
+            showToast(result.msg, result.ok ? 'success' : 'error');
+            if (result.ok) {
+                closeReviewModal();
+                await renderReviews();
+            }
+        }
+
+        async function removeReview(reviewId) {
+            if (!confirm('Excluir esta crítica?')) return;
+            const result = await Storage.deleteReview(reviewId);
+            showToast(result.msg, result.ok ? 'success' : 'error');
+            if (result.ok) await renderReviews();
+        }
+
+        document.querySelectorAll('.modal-overlay').forEach(m => {
+            m.addEventListener('click', (e) => {
+                if (e.target === m) {
+                    if (m.id === 'modal-review') closeReviewModal();
+                }
+            });
+        });
+        document.querySelectorAll('.modal-content').forEach(c => {
+            c.addEventListener('click', (e) => {
+                e.stopPropagation();
+            });
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Meus Favoritos — Note Cine</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="theme.css">
+</head>
+<body>
+
+    <header class="site-header">
+        <button type="button" class="nav-back" onclick="goBack()"><i class="fa-solid fa-arrow-left"></i> Voltar</button>
+        <a href="index.html" class="brand"><i class="fa-solid fa-clapperboard"></i> Note <em>Cine</em></a>
+        <div class="header-right">
+            <button type="button" class="theme-toggle-btn" id="theme-toggle" title="Alternar modo claro/escuro"><i class="fa-solid fa-moon"></i></button>
+            <a href="perfil.html" class="user-btn" id="user-avatar-btn" title="Perfil">U</a>
+        </div>
+    </header>
+
+    <div class="container-narrow">
+        <h1 class="section-title" style="margin: 28px 0 24px;"><i class="fa-solid fa-heart" style="color:var(--nc-gold);"></i> Meus Favoritos</h1>
+        <div class="fav-grid" id="fav-list"></div>
+    </div>
+
+    <footer class="site-footer">
+        <p>&copy; 2026 Note Cine</p>
+    </footer>
+
+    <script src="js/plans.js"></script>
+    <script src="js/config.js"></script>
+    <script src="js/api.js"></script>
+    <script src="js/theme.js"></script>
+    <script src="js/storage.js"></script>
+    <script>
+        const user = requireAuth();
+        if (!user) throw new Error('auth');
+
+        // Inicializa o botão de alternar tema
+        const themeToggleBtn = document.getElementById('theme-toggle');
+        if (themeToggleBtn) {
+            function updateThemeIcon() {
+                const currentTheme = ThemeManager.getEffectiveTheme();
+                const icon = themeToggleBtn.querySelector('i');
+                icon.className = currentTheme === 'dark' ? 'fa-solid fa-moon' : 'fa-solid fa-sun';
+            }
+            themeToggleBtn.addEventListener('click', () => {
+                ThemeManager.toggleTheme();
+                updateThemeIcon();
+            });
+            window.addEventListener('themechange', updateThemeIcon);
+            updateThemeIcon();
+        }
+
+        document.getElementById('user-avatar-btn').textContent = user.username.charAt(0).toUpperCase();
+        const savedAvatar = localStorage.getItem(`cineaura_avatar_${user.username}`);
+        if (savedAvatar) {
+            document.getElementById('user-avatar-btn').textContent = '';
+            document.getElementById('user-avatar-btn').style.backgroundImage = `url(${savedAvatar})`;
+        }
+
+        (async () => {
+            const favList = document.getElementById('fav-list');
+            const favorites = await Storage.getFavorites();
+
+            if (!favorites.length) {
+                favList.innerHTML = '<p class="empty-msg" style="grid-column:1/-1;text-align:center;color:var(--nc-grey);">Você ainda não favoritou nenhum título. Use o coração nos cards ou na página do filme.</p>';
+            } else {
+                favorites.forEach((movie, index) => {
+                    const card = document.createElement('article');
+                    card.className = 'fav-card';
+                    card.style.animationDelay = `${Math.min(index * 0.04, 0.4)}s`;
+                    const type = movie.media_type === 'tv' ? 'tv' : 'movie';
+                    card.onclick = () => { window.location.href = `filme.html?id=${encodeURIComponent(movie.id)}&type=${type}`; };
+                    card.innerHTML = `
+                        <img src="${movie.poster}" alt="${movie.title}" loading="lazy" decoding="async">
+                        <div class="fav-info">
+                            <h3>${movie.title}</h3>
+                            <span class="fav-type">${type === 'tv' ? 'Série' : 'Filme'}</span>
+                        </div>
+                    `;
+                    favList.appendChild(card);
+                });
+            }
+        })();
+    </script>
+</body>
+</html>

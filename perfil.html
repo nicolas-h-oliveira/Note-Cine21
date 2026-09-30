@@ -1,0 +1,1161 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Perfil — Note Cine</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="theme.css">
+    <style>
+        /* =========================================================
+           ALTURA DO BANNER DO PERFIL (EXPANDIDO)
+           ========================================================= */
+        .profile-banner {
+            height: 270px !important; /* Exibe mais partes do GIF/Imagem */
+            background-size: cover !important;
+            background-position: center !important;
+            border-radius: 16px 16px 0 0;
+        }
+
+        @media (max-width: 768px) {
+            .profile-banner {
+                height: 180px !important;
+            }
+        }
+
+        /* =========================================================
+           ESTILOS EXCLUSIVOS DO MODAL DE PERSONALIZAÇÃO PREMIUM
+           ========================================================= */
+        .decor-modal-content {
+            max-width: 860px !important;
+            width: 92% !important;
+            background: #0f172a !important;
+            border: 1px solid rgba(255, 255, 255, 0.12) !important;
+            border-radius: 16px !important;
+            padding: 24px !important;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.75) !important;
+            color: #f8fafc !important;
+        }
+
+        .decor-layout-split {
+            display: grid !important;
+            grid-template-columns: 280px 1fr !important;
+            gap: 24px !important;
+            margin-top: 16px !important;
+            text-align: left;
+        }
+
+        @media (max-width: 768px) {
+            .decor-layout-split {
+                grid-template-columns: 1fr !important;
+            }
+        }
+
+        /* Coluna de Prévia */
+        .decor-preview-column {
+            background: #1e293b;
+            padding: 16px;
+            border-radius: 12px;
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .decor-section-title {
+            font-size: 12px;
+            font-weight: 700;
+            color: #94a3b8;
+            text-transform: uppercase;
+            letter-spacing: 0.8px;
+            margin: 0;
+        }
+
+        .premium-preview-card {
+            background: #0f172a;
+            border-radius: 12px;
+            overflow: hidden;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            position: relative;
+        }
+
+        .preview-banner {
+            height: 110px;
+            background: linear-gradient(135deg, var(--accent, #3b82f6), #1e1b4b);
+            background-size: cover;
+            background-position: center;
+        }
+
+        .preview-avatar-row {
+            padding: 12px 16px 16px 16px;
+            display: flex;
+            align-items: flex-end;
+            gap: 12px;
+            margin-top: -30px;
+        }
+
+        .preview-avatar-wrap {
+            position: relative;
+            width: 60px;
+            height: 60px;
+            flex-shrink: 0;
+        }
+
+        .preview-avatar-wrap .avatar {
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            background: #334155;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 22px;
+            font-weight: bold;
+            color: #fff;
+            background-size: cover;
+            background-position: center;
+            border: 3px solid #0f172a;
+        }
+
+        .preview-name-info {
+            display: flex;
+            flex-direction: column;
+            gap: 2px;
+        }
+
+        .preview-name-info strong {
+            color: #fff;
+            font-size: 15px;
+            line-height: 1.2;
+        }
+
+        .preview-live-badge {
+            font-size: 11px;
+            color: var(--accent, #3b82f6);
+            font-weight: 600;
+        }
+
+        /* Coluna de Edição */
+        .decor-scroll-container {
+            max-height: 480px;
+            overflow-y: auto;
+            padding-right: 8px;
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+        }
+
+        .decor-scroll-container::-webkit-scrollbar {
+            width: 6px;
+        }
+        .decor-scroll-container::-webkit-scrollbar-thumb {
+            background: #334155;
+            border-radius: 4px;
+        }
+
+        .decor-editor-card {
+            background: #1e293b;
+            padding: 16px;
+            border-radius: 12px;
+            border: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        .editor-card-title {
+            font-size: 14px;
+            font-weight: 600;
+            color: #f1f5f9;
+            margin: 0 0 4px 0;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .editor-card-subtitle {
+            font-size: 12px;
+            color: #94a3b8;
+            margin: 0 0 12px 0;
+        }
+
+        .file-selectors-group input[type="file"] {
+            display: none !important;
+        }
+
+        .btn-file-label {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 9px 16px;
+            background: #334155;
+            color: #f8fafc;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 13px;
+            font-weight: 500;
+            transition: all 0.2s ease;
+        }
+
+        .btn-file-label:hover {
+            background: #475569;
+            color: #ffffff;
+        }
+
+        .file-selected-name {
+            display: block;
+            font-size: 11px;
+            color: #64748b;
+            margin-top: 6px;
+        }
+
+        .decor-options-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(110px, 1fr));
+            gap: 10px;
+            margin-top: 10px;
+        }
+
+        .decor-card-option {
+            background: #0f172a;
+            border: 2px solid transparent;
+            border-radius: 10px;
+            padding: 10px 8px;
+            color: #cbd5e1;
+            cursor: pointer;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+            font-size: 12px;
+            font-weight: 500;
+            transition: all 0.2s ease;
+            text-align: center;
+        }
+
+        .decor-card-option:hover {
+            background: #1e293b;
+            border-color: #475569;
+            color: #fff;
+        }
+
+        .decor-card-option.is-selected {
+            border-color: var(--accent, #3b82f6);
+            background: rgba(59, 130, 246, 0.12);
+            color: #ffffff;
+            box-shadow: 0 0 12px rgba(59, 130, 246, 0.25);
+        }
+
+        .accent-swatches-premium {
+            display: flex;
+            gap: 12px;
+            flex-wrap: wrap;
+            margin-top: 10px;
+        }
+
+        .accent-swatch-premium-btn {
+            width: 34px;
+            height: 34px;
+            border-radius: 50%;
+            border: 2px solid transparent;
+            cursor: pointer;
+            transition: transform 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease;
+        }
+
+        .accent-swatch-premium-btn:hover {
+            transform: scale(1.15);
+        }
+
+        .accent-swatch-premium-btn.is-selected {
+            border-color: #ffffff !important;
+            box-shadow: 0 0 12px rgba(255, 255, 255, 0.6);
+            transform: scale(1.1);
+        }
+
+        .decor-footer-actions {
+            display: flex;
+            gap: 12px;
+            margin-top: 16px;
+        }
+
+        .decor-footer-actions .btn-submit {
+            flex: 1;
+        }
+    </style>
+</head>
+<body>
+
+    <header class="site-header">
+        <div class="header-left">
+            <button type="button" class="nav-back" onclick="goBack()"><i class="fa-solid fa-arrow-left"></i> Voltar</button>
+            <a href="index.html" class="brand"><i class="fa-solid fa-clapperboard"></i> Note <em>Cine</em></a>
+        </div>
+        <div class="header-right" id="header-controls">
+            <button type="button" class="theme-toggle-btn" id="theme-toggle" title="Alternar modo claro/escuro"><i class="fa-solid fa-moon"></i></button>
+            <a href="favoritos.html" class="btn-ghost" id="nav-favs-link"><i class="fa-solid fa-heart"></i> Favoritos</a>
+            <a href="perfil.html" class="user-btn" id="user-avatar-btn" title="Perfil">U</a>
+        </div>
+    </header>
+
+    <div class="container-narrow">
+        <!-- HERO DO PERFIL -->
+        <div class="profile-hero" id="profile-hero">
+            <div class="profile-banner no-banner" id="profile-banner"></div>
+            <div class="profile-hero-inner">
+                <div class="profile-avatar-zone">
+                    <div class="avatar-effect" id="avatar-effect"></div>
+                    <div class="avatar-frame-wrap" id="avatar-frame-wrap">
+                        <div class="avatar profile-avatar" id="user-avatar">?</div>
+                    </div>
+                </div>
+                <div class="profile-head-info">
+                    <div class="profile-name-row">
+                        <h2 id="user-name">Carregando...</h2>
+                        <span class="role-badge" id="user-role">Carregando...</span>
+                    </div>
+                    <p class="bio" id="user-bio">Ainda não há uma biografia cadastrada.</p>
+                </div>
+                <div class="profile-actions" id="profile-action-buttons">
+                    <button type="button" class="btn-edit" onclick="openProfileModal()"><i class="fa-solid fa-pen"></i> Editar Perfil</button>
+                    <button type="button" class="btn-edit premium-decor-btn" id="btn-decor" style="display:none;" onclick="openDecorModal()"><i class="fa-solid fa-wand-magic-sparkles"></i> Decorar Perfil</button>
+                    <a href="admin.html" class="btn-edit" id="admin-link" style="display:none;"><i class="fa-solid fa-screwdriver-wrench"></i> Admin</a>
+                </div>
+            </div>
+        </div>
+
+        <!-- UPSALE PARA PLANOS BÁSICOS -->
+        <div class="premium-upsell" id="premium-upsell" style="display:none;">
+            <i class="fa-solid fa-crown"></i>
+            <p>O <strong>plano Cinéfilo</strong> desbloqueia banner personalizado, GIF, molduras de avatar, efeitos especiais e cores exclusivas. <strong>Seja Cinéfilo para liberar a personalização premium!</strong></p>
+        </div>
+
+        <!-- STATS DO PERFIL -->
+        <div class="profile-stats-card" id="profile-stats" style="margin-bottom: 28px;">
+            <div class="stat-item">
+                <span class="stat-icon"><i class="fa-solid fa-clapperboard"></i></span>
+                <div class="stat-info">
+                    <span class="stat-val" id="stat-movies-count">0</span>
+                    <span class="stat-lbl">Filmes no Perfil</span>
+                </div>
+            </div>
+            <div class="stat-item">
+                <span class="stat-icon"><i class="fa-solid fa-star"></i></span>
+                <div class="stat-info">
+                    <span class="stat-val" id="stat-rating-avg">0.0</span>
+                    <span class="stat-lbl">Média de Notas</span>
+                </div>
+            </div>
+            <div class="stat-item">
+                <span class="stat-icon"><i class="fa-solid fa-message"></i></span>
+                <div class="stat-info">
+                    <span class="stat-val" id="stat-reviews-count">0</span>
+                    <span class="stat-lbl">Críticas Escritas</span>
+                </div>
+            </div>
+            <div class="stat-item">
+                <span class="stat-icon"><i class="fa-solid fa-calendar-day"></i></span>
+                <div class="stat-info">
+                    <span class="stat-val" id="stat-joined-date">—</span>
+                    <span class="stat-lbl">Membro Desde</span>
+                </div>
+            </div>
+            <div class="stat-item plan-stat-card-wrap">
+                <span class="stat-icon"><i class="fa-solid fa-crown"></i></span>
+                <div class="stat-info">
+                    <span class="stat-val plan-badge-text-val" id="stat-plan-name">Visitante</span>
+                    <span class="stat-lbl">Plano Atual</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="section-header">
+            <div class="section-title"><i class="fa-solid fa-clapperboard"></i> Filmes no Perfil</div>
+        </div>
+        <div class="slots-grid" id="movies-grid"></div>
+        
+        <div class="section-header" style="margin-top: 30px;">
+            <div class="section-title"><i class="fa-solid fa-masks-theater"></i> Personagens Favoritos</div>
+        </div>
+        <div class="slots-grid" id="characters-grid"></div>
+
+        <!-- SEÇÃO DE CRÍTICAS DO USUÁRIO -->
+        <div class="section-header" style="margin-top: 30px;">
+            <div class="section-title"><i class="fa-solid fa-message"></i> Críticas Públicas</div>
+        </div>
+        <div class="reviews-list profile-reviews-list" id="profile-reviews-list" style="margin-top: 15px;">
+            <!-- Críticas renderizadas aqui -->
+        </div>
+    </div>
+
+    <!-- MODAL: EDITAR PERFIL BÁSICO -->
+    <div class="modal-overlay" id="modal-profile">
+        <div class="modal-content">
+            <button type="button" class="btn-close-modal" onclick="closeModals()"><i class="fa-solid fa-xmark"></i></button>
+            <h3 style="color:var(--nc-white); margin-bottom:20px;">Editar Perfil</h3>
+            
+            <div class="form-group">
+                <label>Foto de Perfil (Envie do PC)</label>
+                <input type="file" id="edit-avatar" accept="image/*">
+            </div>
+            
+            <div class="form-group">
+                <label>Sua Biografia</label>
+                <textarea id="edit-bio" rows="4" placeholder="Escreva algo sobre você..."></textarea>
+            </div>
+            <button type="button" class="btn-submit" onclick="saveProfile()"><i class="fa-solid fa-floppy-disk"></i> Salvar Perfil</button>
+        </div>
+    </div>
+
+    <!-- MODAL: DECORAR PERFIL (PREMIUM/ADM) -->
+    <div class="modal-overlay" id="modal-decor">
+        <div class="modal-content decor-modal-content">
+            <button type="button" class="btn-close-modal" onclick="closeModals()"><i class="fa-solid fa-xmark"></i></button>
+            <h3 style="color:var(--nc-white); margin-bottom:4px;"><i class="fa-solid fa-wand-magic-sparkles" style="color:var(--nc-gold);"></i> Personalização Premium</h3>
+            <p style="color:var(--nc-grey); font-size:12px; margin-bottom:12px;">Estilize seu perfil com recursos inspirados no Discord e Riot Games.</p>
+
+            <div class="decor-layout-split">
+                <!-- COLUNA PREVIA -->
+                <div class="decor-preview-column">
+                    <h4 class="decor-section-title">Prévia Ao Vivo</h4>
+                    <div class="premium-preview-card" id="decor-live-card">
+                        <div class="preview-banner" id="preview-live-banner"></div>
+                        <div class="preview-avatar-row">
+                            <div class="preview-avatar-wrap">
+                                <div class="avatar-effect" id="preview-live-effect"></div>
+                                <div class="avatar-frame-wrap" id="preview-live-frame-wrap">
+                                    <div class="avatar profile-avatar" id="preview-live-avatar">?</div>
+                                </div>
+                            </div>
+                            <div class="preview-name-info">
+                                <strong id="preview-live-username">Username</strong>
+                                <span class="preview-live-badge" id="preview-live-role">Plano</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- COLUNA FORMULARIO -->
+                <div class="decor-form-column">
+                    <div class="decor-scroll-container">
+                        <!-- BANNER CARD -->
+                        <div class="decor-editor-card">
+                            <h4 class="editor-card-title"><i class="fa-solid fa-image"></i> Banner do Perfil</h4>
+                            <p class="editor-card-subtitle">Selecione uma Imagem ou GIF animado.</p>
+                            <div class="file-selectors-group">
+                                <div class="form-group-inline">
+                                    <label for="decor-banner" class="btn-file-label"><i class="fa-solid fa-upload"></i> Escolher Imagem/GIF</label>
+                                    <input type="file" id="decor-banner" accept="image/*,image/gif" onchange="previewDecorFile('banner')">
+                                </div>
+                                <span class="file-selected-name" id="banner-file-name">Nenhum arquivo selecionado</span>
+                            </div>
+                        </div>
+
+                        <!-- AVATAR CARD -->
+                        <div class="decor-editor-card">
+                            <h4 class="editor-card-title"><i class="fa-solid fa-user"></i> Alterar Avatar</h4>
+                            <div class="file-selectors-group">
+                                <div class="form-group-inline">
+                                    <label for="decor-avatar-file" class="btn-file-label"><i class="fa-solid fa-upload"></i> Nova Foto</label>
+                                    <input type="file" id="decor-avatar-file" accept="image/*" onchange="previewDecorFile('avatar')">
+                                </div>
+                                <span class="file-selected-name" id="avatar-file-name">Nenhum arquivo selecionado</span>
+                            </div>
+                        </div>
+
+                        <!-- MOLDURAS CARD -->
+                        <div class="decor-editor-card">
+                            <h4 class="editor-card-title"><i class="fa-solid fa-circle-user"></i> Galeria de Molduras</h4>
+                            <div class="decor-options-grid" id="frame-options">
+                                <button type="button" class="decor-card-option" data-frame="none">Sem moldura</button>
+                                <button type="button" class="decor-card-option" data-frame="gold">👑 Dourada</button>
+                                <button type="button" class="decor-card-option" data-frame="blue">💎 Azul Cristal</button>
+                                <button type="button" class="decor-card-option" data-frame="neon">⚡ Luz Neon</button>
+                                <button type="button" class="decor-card-option" data-frame="rainbow">🌈 Arco-íris</button>
+                            </div>
+                        </div>
+
+                        <!-- EFEITOS CARD -->
+                        <div class="decor-editor-card">
+                            <h4 class="editor-card-title"><i class="fa-solid fa-sparkles"></i> Efeitos Especiais</h4>
+                            <div class="decor-options-grid" id="effect-options">
+                                <button type="button" class="decor-card-option" data-effect="none">Sem efeito</button>
+                                <button type="button" class="decor-card-option" data-effect="glow">✨ Glow</button>
+                                <button type="button" class="decor-card-option" data-effect="neon">⚡ Neon</button>
+                                <button type="button" class="decor-card-option" data-effect="rainbow">🌈 Arco-íris</button>
+                                <button type="button" class="decor-card-option" data-effect="particles">💫 Partículas</button>
+                                <button type="button" class="decor-card-option" data-effect="shine">⭐ Brilho</button>
+                                <button type="button" class="decor-card-option" data-effect="fire">🔥 Fogo</button>
+                                <button type="button" class="decor-card-option" data-effect="ice">❄️ Gelo</button>
+                                <button type="button" class="decor-card-option" data-effect="galaxy">🌌 Galáxia</button>
+                            </div>
+                        </div>
+
+                        <!-- CORES CARD -->
+                        <div class="decor-editor-card">
+                            <h4 class="editor-card-title"><i class="fa-solid fa-palette"></i> Cor de Destaque</h4>
+                            <div class="accent-swatches-premium" id="accent-options"></div>
+                        </div>
+                    </div>
+
+                    <!-- CONTROL BUTTONS -->
+                    <div class="decor-footer-actions">
+                        <button type="button" class="btn-submit btn-save-decor-premium" id="btn-save-decor" onclick="saveDecor()">
+                            <i class="fa-solid fa-floppy-disk"></i> <span id="btn-save-decor-text">Salvar Decoração</span>
+                        </button>
+                        <button type="button" class="btn-secondary" style="justify-content:center;" onclick="removeDecor()">
+                            <i class="fa-solid fa-broom"></i> Remover
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL: ADICIONAR PERSONAGEM -->
+    <div class="modal-overlay" id="modal-character">
+        <div class="modal-content">
+            <button type="button" class="btn-close-modal" onclick="closeModals()"><i class="fa-solid fa-xmark"></i></button>
+            <h3 style="color:var(--nc-white); margin-bottom:20px;" id="char-modal-title">Adicionar Personagem</h3>
+            
+            <div class="form-group">
+                <label>Foto do Personagem</label>
+                <input type="file" id="char-image" accept="image/*">
+            </div>
+            <div class="form-group">
+                <label>Nome do Personagem</label>
+                <input type="text" id="char-name" placeholder="Ex: Batman">
+            </div>
+            <div class="form-group">
+                <label>Obra de Origem / Motivo</label>
+                <textarea id="char-reason" rows="3" placeholder="Ex: Filme The Batman (2022)..."></textarea>
+            </div>
+            
+            <div style="display:flex; gap:10px;">
+                <button type="button" class="btn-submit" onclick="saveCharacter()">Salvar no Slot</button>
+                <button type="button" class="btn-secondary btn-danger-action" id="btn-delete-char" style="display:none;" onclick="deleteCharacter()">Excluir</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="toast-notification" role="status"></div>
+
+    <script src="js/plans.js"></script>
+    <script src="js/config.js"></script>
+    <script src="js/api.js"></script>
+    <script src="js/theme.js"></script>
+    <script src="js/storage.js"></script>
+    <script src="js/components.js"></script>
+    <script>
+        let currentUser = null;
+        let targetUser = '';
+        let isOwnProfile = true;
+        let profileUserId = null;
+        
+        let localProfileData = null;
+        let selectedFrame = 'none';
+        let selectedEffect = 'none';
+        let selectedAccent = '#3B82F6';
+
+        const ACCENTS = [
+            { name: 'Azul Padrão', value: '#3B82F6' },
+            { name: 'Roxo Nitro', value: '#5865F2' },
+            { name: 'Dourado Premium', value: '#F5C542' },
+            { name: 'Rosa Neon', value: '#FF007F' },
+            { name: 'Verde Esmeralda', value: '#10B981' },
+            { name: 'Carmesim', value: '#EF4444' },
+            { name: 'Turquesa', value: '#06B6D4' }
+        ];
+
+        document.addEventListener('DOMContentLoaded', async () => {
+            currentUser = requireAuth();
+            if (!currentUser) return;
+
+            // Inicializa o botão de alternar tema
+            const themeToggleBtn = document.getElementById('theme-toggle');
+            if (themeToggleBtn) {
+                function updateThemeIcon() {
+                    const currentTheme = ThemeManager.getEffectiveTheme();
+                    const icon = themeToggleBtn.querySelector('i');
+                    icon.className = currentTheme === 'dark' ? 'fa-solid fa-moon' : 'fa-solid fa-sun';
+                }
+                themeToggleBtn.addEventListener('click', () => {
+                    ThemeManager.toggleTheme();
+                    updateThemeIcon();
+                });
+                window.addEventListener('themechange', updateThemeIcon);
+                updateThemeIcon();
+            }
+
+            const urlParams = new URLSearchParams(window.location.search);
+            targetUser = urlParams.get('username') || '';
+
+            if (!targetUser || targetUser.toLowerCase() === currentUser.username.toLowerCase()) {
+                isOwnProfile = true;
+                targetUser = currentUser.username;
+            } else {
+                isOwnProfile = false;
+            }
+
+            await loadProfileData();
+        });
+
+        // Retorna todos os filmes/favoritos sem ocultar nada
+        function filterProfileMoviesOnly(rawMovies) {
+            if (!Array.isArray(rawMovies)) return [];
+            return rawMovies;
+        }
+
+        async function loadProfileData() {
+            try {
+                const res = await fetch(`api.php?action=get_profile_data&username=${encodeURIComponent(targetUser)}`);
+                const data = await res.json();
+
+                if (!data.success) {
+                    showToast(data.message, 'error');
+                    setTimeout(() => { window.location.href = 'index.html'; }, 2000);
+                    return;
+                }
+
+                localProfileData = data;
+                profileUserId = data.user.id;
+
+                // =================================================================
+                // BUSCA OBRIGATÓRIA DA API DO SERVIDOR (BANCO DE DADOS REAL)
+                // =================================================================
+                // O perfil DEVE mostrar apenas os filmes da tabela top_movies.
+                // Não deve haver fallback para favoritos ou outras listas, senão
+                // o usuário verá filmes no perfil que ele nunca adicionou ali.
+                let serverMovies = [];
+
+                if (Array.isArray(data.top_movies)) {
+                    serverMovies = data.top_movies;
+                }
+
+                localProfileData.movies = serverMovies;
+                // =================================================================
+
+                document.getElementById('user-name').innerText = data.user.username;
+                document.title = `${data.user.username} — Note Cine`;
+                document.getElementById('user-role').innerText = NoteCinePlans.roleBadgeText(data.user.role);
+                document.getElementById('user-role').className = `role-badge role-${data.user.role === 'admin' ? 'admin' : (data.user.role === 'cinefilo' ? 'gold' : 'user')}`;
+
+                document.getElementById('user-bio').innerText = data.user.bio || "Ainda não há uma biografia cadastrada.";
+
+                const avatarEl = document.getElementById('user-avatar');
+                if (data.user.avatar_url) {
+                    avatarEl.innerText = '';
+                    avatarEl.style.backgroundImage = `url(${data.user.avatar_url})`;
+                } else {
+                    avatarEl.innerText = data.user.username.charAt(0).toUpperCase();
+                    avatarEl.style.backgroundImage = '';
+                }
+
+                const bannerEl = document.getElementById('profile-banner');
+                if (data.user.banner_url) {
+                    bannerEl.style.backgroundImage = `url(${data.user.banner_url})`;
+                    bannerEl.classList.remove('no-banner');
+                    bannerEl.classList.add('has-banner');
+                } else {
+                    bannerEl.style.backgroundImage = '';
+                    bannerEl.classList.remove('has-banner');
+                    bannerEl.classList.add('no-banner');
+                }
+
+                const frameEl = document.getElementById('avatar-frame-wrap');
+                frameEl.className = 'avatar-frame-wrap';
+                if (data.user.avatar_frame && data.user.avatar_frame !== 'none') {
+                    frameEl.classList.add(`frame-${data.user.avatar_frame}`);
+                }
+
+                const effectEl = document.getElementById('avatar-effect');
+                effectEl.className = 'avatar-effect';
+                if (data.user.profile_effect && data.user.profile_effect !== 'none') {
+                    effectEl.classList.add(`effect-${data.user.profile_effect}`);
+                }
+
+                const hero = document.getElementById('profile-hero');
+                hero.style.setProperty('--accent', data.user.accent_color || '#3B82F6');
+
+                const isPremium = (data.user.role === 'cinefilo' || data.user.role === 'vip' || data.user.role === 'admin' || data.user.role === 'nitro');
+                if (isOwnProfile) {
+                    document.getElementById('profile-action-buttons').style.display = 'flex';
+                    if (currentUser.role === 'admin') {
+                        document.getElementById('admin-link').style.display = 'inline-flex';
+                    }
+                    if (isPremium) {
+                        document.getElementById('btn-decor').style.display = 'inline-flex';
+                        document.getElementById('premium-upsell').style.display = 'none';
+                    } else {
+                        document.getElementById('btn-decor').style.display = 'none';
+                        document.getElementById('premium-upsell').style.display = 'flex';
+                    }
+                } else {
+                    document.getElementById('profile-action-buttons').style.display = 'none';
+                    document.getElementById('premium-upsell').style.display = 'none';
+                }
+
+                const userBtn = document.getElementById('user-avatar-btn');
+                if (userBtn) {
+                    userBtn.textContent = currentUser.username.charAt(0).toUpperCase();
+                    const curUserRes = await fetch('api.php?action=get_current_user');
+                    const curUserData = await curUserRes.json();
+                    if (curUserData.success && curUserData.user.avatar_url) {
+                        userBtn.textContent = '';
+                        userBtn.style.backgroundImage = `url(${curUserData.user.avatar_url})`;
+                    }
+                }
+
+                await renderStatsAndFavorites();
+                await renderMoviesGrid();
+                renderCharactersGrid();
+                renderReviews();
+            } catch (e) {
+                console.error(e);
+            }
+        }
+
+        async function renderStatsAndFavorites() {
+            const rawMovies = localProfileData.movies || [];
+            const profileMovies = filterProfileMoviesOnly(rawMovies);
+            
+            document.getElementById('stat-movies-count').innerText = profileMovies.length;
+
+            const reviews = localProfileData.reviews || [];
+            document.getElementById('stat-reviews-count').innerText = reviews.length;
+
+            if (reviews.length > 0) {
+                const sum = reviews.reduce((acc, r) => acc + parseFloat(r.rating || 0), 0);
+                document.getElementById('stat-rating-avg').innerText = (sum / reviews.length).toFixed(1);
+            } else {
+                document.getElementById('stat-rating-avg').innerText = '0.0';
+            }
+
+            const joinedDate = new Date(localProfileData.user.created_at);
+            document.getElementById('stat-joined-date').innerText = joinedDate.toLocaleDateString('pt-BR', { month: 'short', year: 'numeric' });
+
+            const plan = NoteCinePlans.getPlan(localProfileData.user.role);
+            document.getElementById('stat-plan-name').innerText = plan.label;
+        }
+
+        async function renderMoviesGrid() {
+            const grid = document.getElementById('movies-grid');
+            grid.innerHTML = '';
+
+            const rawMovies = localProfileData.movies || [];
+            const profileMovies = filterProfileMoviesOnly(rawMovies);
+
+            const unpositionedMovies = profileMovies.filter(m => m.slot_position === null || m.slot_position === undefined);
+
+            const userPlan = NoteCinePlans.getPlan(localProfileData.user.role);
+            const totalSlots = userPlan.unlimited ? Math.max(profileMovies.length + 1, 5) : userPlan.maxSlots;
+
+            let unpositionedIdx = 0;
+
+            for (let i = 0; i < totalSlots; i++) {
+                let movie = profileMovies.find(m => m.slot_position !== null && m.slot_position !== undefined && parseInt(m.slot_position) === i);
+
+                if (!movie && unpositionedIdx < unpositionedMovies.length) {
+                    movie = unpositionedMovies[unpositionedIdx];
+                    unpositionedIdx++;
+                }
+
+                if (movie) {
+                    const posterUrlToUse = typeof normalizePosterUrl === 'function' ? normalizePosterUrl(movie) : (movie.poster || movie.poster_url);
+                    const card = document.createElement('div');
+                    card.className = 'slot-card filled';
+                    card.style.backgroundImage = `url(${posterUrlToUse})`;
+                    card.innerHTML = `<div class="overlay"><h4>${esc(movie.title)}</h4></div>`;
+                    card.onclick = () => {
+                        // Extrai o ID numérico e o tipo do composite ID
+                        let movieId = movie.id || movie.movie_id || '';
+                        let mediaType = movie.media_type || 'movie';
+                        
+                        // Se é um composite ID (formato: "movie:550"), separa o tipo e o ID
+                        if (movieId && movieId.toString().includes(':')) {
+                            const parts = movieId.toString().split(':');
+                            mediaType = parts[0];
+                            movieId = parts[1];
+                        }
+                        
+                        window.location.href = `filme.html?id=${encodeURIComponent(movieId)}&type=${encodeURIComponent(mediaType)}`;
+                    };
+                    grid.appendChild(card);
+                } else {
+                    const card = document.createElement('div');
+                    card.className = 'slot-card empty';
+                    if (isOwnProfile) {
+                        card.innerHTML = `<i class="fa-solid fa-plus"></i><span>Adicionar Filme</span>`;
+                        card.onclick = () => { window.location.href = 'index.html'; };
+                    } else {
+                        card.innerHTML = `<span>Livre</span>`;
+                    }
+                    grid.appendChild(card);
+                }
+            }
+        }
+
+        function renderCharactersGrid() {
+            const grid = document.getElementById('characters-grid');
+            grid.innerHTML = '';
+
+            const characters = localProfileData.top_characters || [];
+            const userPlan = NoteCinePlans.getPlan(localProfileData.user.role);
+            const totalSlots = userPlan.unlimited ? Math.max(characters.length + 1, 5) : userPlan.maxSlots;
+
+            for (let i = 0; i < totalSlots; i++) {
+                const char = characters.find(c => parseInt(c.slot_position) === i);
+                if (char) {
+                    const card = document.createElement('div');
+                    card.className = 'slot-card filled';
+                    card.style.backgroundImage = `url(${char.image_url})`;
+                    card.innerHTML = `<div class="overlay"><h4>${char.character_name}</h4><p>${char.work_origin}</p></div>`;
+                    if (isOwnProfile) {
+                        card.onclick = () => { openCharModal(i, char); };
+                    }
+                    grid.appendChild(card);
+                } else {
+                    const card = document.createElement('div');
+                    card.className = 'slot-card empty';
+                    if (isOwnProfile) {
+                        card.innerHTML = `<i class="fa-solid fa-user-plus"></i><span>Adicionar</span>`;
+                        card.onclick = () => { openCharModal(i); };
+                    } else {
+                        card.innerHTML = `<span>Livre</span>`;
+                    }
+                    grid.appendChild(card);
+                }
+            }
+        }
+
+        function renderReviews() {
+            const list = document.getElementById('profile-reviews-list');
+            list.innerHTML = '';
+
+            const reviews = localProfileData.reviews || [];
+            if (reviews.length === 0) {
+                list.innerHTML = '<p class="empty-msg" style="color:var(--nc-grey);">Nenhuma crítica pública escrita ainda.</p>';
+                return;
+            }
+
+            list.innerHTML = reviews.map(r => {
+                const mediaType = r.movie_id.startsWith('tv:') ? 'tv' : 'movie';
+                const idOnly = r.movie_id.split(':')[1];
+                return `
+                    <article class="review-card">
+                        <div class="review-head">
+                            <div>
+                                <strong style="cursor:pointer;color:var(--nc-blue);" onclick="window.location.href='filme.html?id=${idOnly}&type=${mediaType}'">
+                                    Ver Título Relacionado
+                                </strong>
+                                <span class="review-date"><i class="fa-solid fa-calendar"></i> ${new Date(r.created_at).toLocaleDateString('pt-BR')}</span>
+                            </div>
+                            <span class="review-rating"><i class="fa-solid fa-star"></i> ${Number(r.rating).toFixed(1)}</span>
+                        </div>
+                        <h4 style="margin-top:6px;">${esc(r.title)}</h4>
+                        <p>${esc(r.review_text)}</p>
+                    </article>
+                `;
+            }).join('');
+        }
+
+        function esc(str) {
+            return String(str ?? '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+        }
+
+        /* ---------- EDITAR PERFIL BÁSICO ---------- */
+        function openProfileModal() {
+            document.getElementById('edit-bio').value = localProfileData.user.bio || '';
+            document.getElementById('modal-profile').style.display = 'flex';
+        }
+
+        async function saveProfile() {
+            const bio = document.getElementById('edit-bio').value;
+            const avatarInput = document.getElementById('edit-avatar');
+
+            const formData = new FormData();
+            formData.append('action', 'save_profile');
+            formData.append('bio', bio);
+            if (avatarInput.files && avatarInput.files[0]) {
+                formData.append('avatar', avatarInput.files[0]);
+            }
+
+            try {
+                const res = await fetch('api.php', { method: 'POST', body: formData });
+                const data = await res.json();
+                if (data.success) {
+                    showToast('Perfil atualizado com sucesso!');
+                    closeModals();
+                    await loadProfileData();
+                } else {
+                    showToast(data.message, 'error');
+                }
+            } catch (e) {
+                showToast('Erro ao salvar dados.', 'error');
+            }
+        }
+
+        /* ---------- DECORAR PERFIL ---------- */
+        function openDecorModal() {
+            const dbDecor = localProfileData.user;
+            selectedFrame = dbDecor.avatar_frame || 'none';
+            selectedEffect = dbDecor.profile_effect || 'none';
+            selectedAccent = dbDecor.accent_color || '#3B82F6';
+
+            const liveAvatar = document.getElementById('preview-live-avatar');
+            const liveUsername = document.getElementById('preview-live-username');
+            const liveRole = document.getElementById('preview-live-role');
+            
+            liveUsername.textContent = dbDecor.username;
+            liveRole.textContent = NoteCinePlans.roleBadgeText(dbDecor.role);
+
+            if (dbDecor.avatar_url) {
+                liveAvatar.textContent = '';
+                liveAvatar.style.backgroundImage = `url(${dbDecor.avatar_url})`;
+            } else {
+                liveAvatar.textContent = dbDecor.username.charAt(0).toUpperCase();
+                liveAvatar.style.backgroundImage = '';
+            }
+
+            const liveBanner = document.getElementById('preview-live-banner');
+            if (dbDecor.banner_url) {
+                liveBanner.style.backgroundImage = `url(${dbDecor.banner_url})`;
+            } else {
+                liveBanner.style.backgroundImage = '';
+            }
+
+            document.getElementById('banner-file-name').textContent = "Nenhum arquivo selecionado";
+            document.getElementById('avatar-file-name').textContent = "Nenhum arquivo selecionado";
+
+            renderAccentSwatches();
+            updateDecorSelections();
+            updateLivePreview();
+
+            document.getElementById('modal-decor').style.display = 'flex';
+        }
+
+        function renderAccentSwatches() {
+            const container = document.getElementById('accent-options');
+            container.innerHTML = ACCENTS.map(a => `
+                <button type="button" class="accent-swatch-premium-btn ${selectedAccent === a.value ? 'is-selected' : ''}"
+                    style="background:${a.value};" data-accent="${a.value}" title="${a.name}" onclick="selectAccentColor('${a.value}')"></button>
+            `).join('');
+        }
+
+        function selectAccentColor(color) {
+            selectedAccent = color;
+            document.querySelectorAll('#accent-options .accent-swatch-premium-btn').forEach(btn => {
+                btn.classList.toggle('is-selected', btn.dataset.accent === color);
+            });
+            updateLivePreview();
+        }
+
+        function updateDecorSelections() {
+            document.querySelectorAll('#frame-options .decor-card-option').forEach(btn => {
+                btn.classList.toggle('is-selected', btn.dataset.frame === selectedFrame);
+                btn.onclick = () => {
+                    selectedFrame = btn.dataset.frame;
+                    updateDecorSelections();
+                    updateLivePreview();
+                };
+            });
+
+            document.querySelectorAll('#effect-options .decor-card-option').forEach(btn => {
+                btn.classList.toggle('is-selected', btn.dataset.effect === selectedEffect);
+                btn.onclick = () => {
+                    selectedEffect = btn.dataset.effect;
+                    updateDecorSelections();
+                    updateLivePreview();
+                };
+            });
+        }
+
+        function updateLivePreview() {
+            const liveFrameWrap = document.getElementById('preview-live-frame-wrap');
+            liveFrameWrap.className = 'avatar-frame-wrap';
+            if (selectedFrame !== 'none') {
+                liveFrameWrap.classList.add(`frame-${selectedFrame}`);
+            }
+
+            const liveEffect = document.getElementById('preview-live-effect');
+            liveEffect.className = 'avatar-effect';
+            if (selectedEffect !== 'none') {
+                liveEffect.classList.add(`effect-${selectedEffect}`);
+            }
+
+            const liveCard = document.getElementById('decor-live-card');
+            liveCard.style.setProperty('--accent', selectedAccent);
+        }
+
+        function previewDecorFile(type) {
+            const input = type === 'banner' ? document.getElementById('decor-banner') : document.getElementById('decor-avatar-file');
+            const nameLabel = type === 'banner' ? document.getElementById('banner-file-name') : document.getElementById('avatar-file-name');
+            const previewEl = type === 'banner' ? document.getElementById('preview-live-banner') : document.getElementById('preview-live-avatar');
+
+            if (input.files && input.files[0]) {
+                const file = input.files[0];
+                nameLabel.textContent = file.name;
+
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    if (type === 'banner') {
+                        previewEl.style.backgroundImage = `url(${e.target.result})`;
+                    } else {
+                        previewEl.textContent = '';
+                        previewEl.style.backgroundImage = `url(${e.target.result})`;
+                    }
+                };
+                reader.readAsDataURL(file);
+            }
+        }
+
+        async function saveDecor() {
+            const btn = document.getElementById('btn-save-decor');
+            const btnText = document.getElementById('btn-save-decor-text');
+            
+            btn.classList.add('loading');
+            btnText.textContent = "Salvando...";
+
+            const bannerInput = document.getElementById('decor-banner');
+            const avatarInput = document.getElementById('decor-avatar-file');
+
+            const formData = new FormData();
+            formData.append('action', 'save_decor');
+            formData.append('frame', selectedFrame);
+            formData.append('effect', selectedEffect);
+            formData.append('accent', selectedAccent);
+
+            if (bannerInput.files && bannerInput.files[0]) {
+                formData.append('banner', bannerInput.files[0]);
+            }
+            if (avatarInput.files && avatarInput.files[0]) {
+                formData.append('avatar', avatarInput.files[0]);
+            }
+
+            try {
+                const res = await fetch('api.php', { method: 'POST', body: formData });
+                const data = await res.json();
+                
+                if (data.success) {
+                    showToast('Decoração aplicada com sucesso!');
+                    closeModals();
+                    await loadProfileData();
+                } else {
+                    showToast(data.message, 'error');
+                }
+            } catch (e) {
+                showToast('Erro de rede ao salvar decoração.', 'error');
+            } finally {
+                btn.classList.remove('loading');
+                btnText.textContent = "Salvar Decoração";
+            }
+        }
+
+        async function removeDecor() {
+            if (!confirm('Deseja mesmo remover todas as decorações premium?')) return;
+
+            try {
+                const res = await fetch('api.php?action=remove_decor');
+                const data = await res.json();
+                if (data.success) {
+                    showToast('Decorações removidas.');
+                    closeModals();
+                    await loadProfileData();
+                } else {
+                    showToast(data.message, 'error');
+                }
+            } catch (e) {
+                showToast('Erro de rede.', 'error');
+            }
+        }
+
+        /* ---------- PERSONAGENS ---------- */
+        let activeCharSlot = null;
+
+        function openCharModal(slotIndex, charData = null) {
+            activeCharSlot = slotIndex;
+            document.getElementById('char-modal-title').innerText = charData ? 'Editar Personagem' : 'Adicionar Personagem';
+            document.getElementById('char-name').value = charData ? charData.character_name : '';
+            document.getElementById('char-reason').value = charData ? charData.work_origin : '';
+            document.getElementById('char-image').value = '';
+            
+            if (charData) {
+                document.getElementById('btn-delete-char').style.display = 'inline-flex';
+            } else {
+                document.getElementById('btn-delete-char').style.display = 'none';
+            }
+            
+            document.getElementById('modal-character').style.display = 'flex';
+        }
+
+        async function saveCharacter() {
+            const name = document.getElementById('char-name').value.trim();
+            const reason = document.getElementById('char-reason').value.trim();
+            const imageInput = document.getElementById('char-image');
+
+            if (!name) {
+                alert('Escreva o nome do personagem!');
+                return;
+            }
+
+            const formData = new FormData();
+            formData.append('action', 'save_character');
+            formData.append('slot_position', activeCharSlot);
+            formData.append('name', name);
+            formData.append('work', reason);
+
+            if (imageInput.files && imageInput.files[0]) {
+                formData.append('char_image', imageInput.files[0]);
+            } else {
+                const char = (localProfileData.top_characters || []).find(c => parseInt(c.slot_position) === activeCharSlot);
+                if (!char) {
+                    alert('Selecione uma imagem para o personagem!');
+                    return;
+                }
+            }
+
+            try {
+                const res = await fetch('api.php', { method: 'POST', body: formData });
+                const data = await res.json();
+                if (data.success) {
+                    showToast('Personagem salvo!');
+                    closeModals();
+                    await loadProfileData();
+                } else {
+                    showToast(data.message, 'error');
+                }
+            } catch (e) {
+                showToast('Erro ao salvar personagem.', 'error');
+            }
+        }
+
+        async function deleteCharacter() {
+            if (!confirm('Deseja excluir este personagem do slot?')) return;
+
+            const formData = new FormData();
+            formData.append('action', 'delete_character');
+            formData.append('slot_position', activeCharSlot);
+
+            try {
+                const res = await fetch('api.php', { method: 'POST', body: formData });
+                const data = await res.json();
+                if (data.success) {
+                    showToast('Slot limpo.');
+                    closeModals();
+                    await loadProfileData();
+                }
+            } catch (e) {
+                showToast('Erro de conexão.', 'error');
+            }
+        }
+
+        function closeModals() {
+            document.querySelectorAll('.modal-overlay').forEach(m => m.style.display = 'none');
+        }
+
+        document.querySelectorAll('.modal-overlay').forEach(m => {
+            m.addEventListener('click', (e) => { if (e.target === m) closeModals(); });
+        });
+        document.querySelectorAll('.modal-content').forEach(c => {
+            c.addEventListener('click', (e) => { e.stopPropagation(); });
+        });
+    </script>
+</body>
+</html>

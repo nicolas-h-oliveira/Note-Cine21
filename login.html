@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Entrar — Note Cine</title>
+    <link rel="stylesheet" href="theme.css">
+    <style>
+        body { display: flex; justify-content: center; align-items: center; min-height: 100vh; padding: 20px; }
+        .auth-container {
+            background: var(--nc-surface);
+            width: 100%;
+            max-width: 420px;
+            padding: 36px;
+            border-radius: 16px;
+            box-shadow: var(--nc-shadow);
+            border: 1px solid var(--nc-border);
+            text-align: center;
+        }
+        .auth-logo { font-size: 26px; font-weight: 900; margin-bottom: 8px; color: var(--nc-white); }
+        .auth-logo em { color: var(--nc-blue); font-style: normal; }
+        .auth-tagline { color: var(--nc-grey); font-size: 13px; margin-bottom: 22px; }
+        .error-message { background: rgba(255, 92, 92, 0.12); color: var(--nc-danger); border: 1px solid rgba(255, 92, 92, 0.35); padding: 12px; border-radius: 8px; margin-bottom: 16px; font-size: 13px; display: none; }
+        .success-message { background: rgba(29, 161, 242, 0.12); color: var(--nc-blue); border: 1px solid rgba(29, 161, 242, 0.35); padding: 12px; border-radius: 8px; margin-bottom: 16px; font-size: 13px; display: none; }
+        .tabs { display: flex; border-bottom: 1px solid var(--nc-border); margin-bottom: 22px; }
+        .tab { flex: 1; padding: 10px; cursor: pointer; color: var(--nc-grey); font-weight: 800; transition: var(--nc-transition); }
+        .tab.active { color: var(--nc-blue); border-bottom: 2px solid var(--nc-blue); }
+        .input-group { text-align: left; margin-bottom: 14px; }
+        .input-group label { display: block; font-size: 12px; color: var(--nc-grey); margin-bottom: 6px; font-weight: 700; }
+        .input-group input { width: 100%; background: var(--nc-bg); border: 1px solid var(--nc-border); color: var(--nc-white); padding: 12px; border-radius: 8px; outline: none; }
+        .input-group input:focus { border-color: var(--nc-blue); }
+        #register-form { display: none; }
+    </style>
+</head>
+<body>
+
+    <div class="auth-container">
+        <div class="auth-logo">Note <em>Cine</em></div>
+        <p class="auth-tagline">Filmes, séries e animes em um só lugar.</p>
+
+        <div id="error-msg" class="error-message"></div>
+        <div id="success-msg" class="success-message"></div>
+
+        <div class="tabs">
+            <div class="tab active" onclick="switchTab('login')" id="tab-login">Entrar</div>
+            <div class="tab" onclick="switchTab('register')" id="tab-register">Criar conta</div>
+        </div>
+
+        <form id="login-form" onsubmit="handleLogin(event)">
+            <div class="input-group">
+                <label>Usuário ou e-mail</label>
+                <input type="text" id="login-input" required placeholder="Seu usuário">
+            </div>
+            <div class="input-group">
+                <label>Senha</label>
+                <input type="password" id="login-password" required placeholder="••••••••">
+            </div>
+            <button type="submit" class="btn-primary" style="width:100%;justify-content:center;margin-top:8px;">Entrar no Note Cine</button>
+        </form>
+
+        <form id="register-form" onsubmit="handleRegister(event)">
+            <div class="input-group">
+                <label>Nome de usuário</label>
+                <input type="text" id="reg-username" required>
+            </div>
+            <div class="input-group">
+                <label>E-mail</label>
+                <input type="email" id="reg-email" required>
+            </div>
+            <div class="input-group">
+                <label>Senha</label>
+                <input type="password" id="reg-password" required>
+            </div>
+            <button type="submit" class="btn-primary" style="width:100%;justify-content:center;margin-top:8px;">Cadastrar</button>
+        </form>
+    </div>
+
+    <script>
+        function switchTab(tab) {
+            document.getElementById('error-msg').style.display = 'none';
+            document.getElementById('success-msg').style.display = 'none';
+
+            if (tab === 'login') {
+                document.getElementById('tab-login').classList.add('active');
+                document.getElementById('tab-register').classList.remove('active');
+                document.getElementById('login-form').style.display = 'block';
+                document.getElementById('register-form').style.display = 'none';
+            } else {
+                document.getElementById('tab-register').classList.add('active');
+                document.getElementById('tab-login').classList.remove('active');
+                document.getElementById('register-form').style.display = 'block';
+                document.getElementById('login-form').style.display = 'none';
+            }
+        }
+
+        async function handleLogin(e) {
+            e.preventDefault();
+            const btn = e.target.querySelector('button');
+            btn.textContent = 'Carregando…';
+
+            const formData = new FormData();
+            formData.append('action', 'login');
+            formData.append('login', document.getElementById('login-input').value);
+            formData.append('password', document.getElementById('login-password').value);
+
+            try {
+                const response = await fetch('api.php', { method: 'POST', body: formData });
+                if (!response.ok) throw new Error('HTTP');
+                const data = await response.json();
+
+                if (data.success) {
+                    localStorage.setItem('cineaura_user', JSON.stringify(data.user));
+                    showSuccess('Acesso liberado! Redirecionando…');
+                    setTimeout(() => { window.location.href = 'index.html'; }, 900);
+                } else {
+                    showError(data.message);
+                }
+            } catch (error) {
+                showError('Erro ao conectar com o servidor. Verifique o XAMPP e o banco de dados.');
+                console.error(error);
+            } finally {
+                btn.textContent = 'Entrar no Note Cine';
+            }
+        }
+
+        async function handleRegister(e) {
+            e.preventDefault();
+            const btn = e.target.querySelector('button');
+            btn.textContent = 'Cadastrando…';
+
+            const formData = new FormData();
+            formData.append('action', 'register');
+            formData.append('username', document.getElementById('reg-username').value);
+            formData.append('email', document.getElementById('reg-email').value);
+            formData.append('password', document.getElementById('reg-password').value);
+
+            try {
+                const response = await fetch('api.php', { method: 'POST', body: formData });
+                const data = await response.json();
+
+                if (data.success) {
+                    showSuccess(data.message);
+                    document.getElementById('register-form').reset();
+                    setTimeout(() => { switchTab('login'); }, 1800);
+                } else {
+                    showError(data.message);
+                }
+            } catch (error) {
+                showError('Erro ao conectar com o servidor.');
+                console.error(error);
+            } finally {
+                btn.textContent = 'Cadastrar';
+            }
+        }
+
+        function showError(msg) {
+            const el = document.getElementById('error-msg');
+            el.textContent = msg;
+            el.style.display = 'block';
+            document.getElementById('success-msg').style.display = 'none';
+        }
+
+        function showSuccess(msg) {
+            const el = document.getElementById('success-msg');
+            el.textContent = msg;
+            el.style.display = 'block';
+            document.getElementById('error-msg').style.display = 'none';
+        }
+    </script>
+</body>
+</html>

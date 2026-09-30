@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Note Cine — filmes, séries e animes em um catálogo moderno.">
+    <title>Note Cine — Filmes & Séries</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="theme.css">
+</head>
+<body>
+
+    <header class="site-header">
+        <div class="header-left">
+            <a href="index.html" class="brand"><i class="fa-solid fa-clapperboard"></i> Note <em>Cine</em></a>
+            <nav class="site-nav">
+                <ul>
+                    <li><a href="index.html" class="active">Início</a></li>
+                    <li><a href="favoritos.html">Favoritos</a></li>
+                    <li><a href="perfil.html">Meu Perfil</a></li>
+                </ul>
+            </nav>
+        </div>
+        <div class="header-right">
+            <div class="search-box">
+                <i class="fa-solid fa-magnifying-glass"></i>
+                <input type="search" id="search-input" placeholder="Buscar títulos..." autocomplete="off">
+                <div id="search-results" role="listbox"></div>
+            </div>
+            <div class="user-controls">
+                <button type="button" class="theme-toggle-btn" id="theme-toggle" title="Alternar modo claro/escuro"><i class="fa-solid fa-moon"></i></button>
+                <a href="perfil.html" class="user-btn" id="user-avatar-btn" title="Meu perfil">U</a>
+                <button type="button" class="logout-btn" onclick="logoutUser()"><i class="fa-solid fa-arrow-right-from-bracket"></i> Sair</button>
+            </div>
+        </div>
+    </header>
+
+    <section class="hero-banner" id="hero-banner">
+        <div class="hero-content">
+            <span class="hero-badge">Destaque</span>
+            <h1 class="hero-title" id="hero-title">Carregando…</h1>
+            <p class="hero-desc" id="hero-desc">Preparando recomendações para você.</p>
+            <div class="hero-btns">
+                <button type="button" class="btn-primary" id="btn-hero-play"><i class="fa-solid fa-play"></i> Ver detalhes</button>
+                <button type="button" class="btn-secondary" id="btn-hero-info"><i class="fa-solid fa-circle-info"></i> Saiba mais</button>
+            </div>
+        </div>
+    </section>
+
+    <main class="page-container">
+        <div id="catalog-sections"></div>
+    </main>
+
+    <footer class="site-footer">
+        <p>&copy; 2026 Note Cine — Todos os direitos reservados. Dados fornecidos por TMDB.</p>
+    </footer>
+
+    <div id="toast-notification" role="status" aria-live="polite"></div>
+
+    <script src="js/plans.js"></script>
+    <script src="js/config.js"></script>
+    <script src="js/api.js"></script>
+    <script src="js/theme.js"></script>
+    <script src="js/storage.js"></script>
+    <script src="js/components.js"></script>
+    <script src="js/carousel.js"></script>
+    <script src="js/search.js"></script>
+    <script src="js/app.js"></script>
+
+    <script>
+        // Inicializa o botão de alternar tema
+        document.addEventListener('DOMContentLoaded', () => {
+            const themeToggleBtn = document.getElementById('theme-toggle');
+            
+            if (themeToggleBtn) {
+                // Atualiza o ícone baseado no tema atual
+                function updateThemeIcon() {
+                    const currentTheme = ThemeManager.getEffectiveTheme();
+                    const icon = themeToggleBtn.querySelector('i');
+                    
+                    if (currentTheme === 'dark') {
+                        icon.className = 'fa-solid fa-moon';
+                    } else {
+                        icon.className = 'fa-solid fa-sun';
+                    }
+                }
+
+                // Atualiza ícone ao clicar
+                themeToggleBtn.addEventListener('click', () => {
+                    ThemeManager.toggleTheme();
+                    updateThemeIcon();
+                });
+
+                // Atualiza ícone quando o tema muda programaticamente
+                window.addEventListener('themechange', updateThemeIcon);
+
+                // Inicializa o ícone
+                updateThemeIcon();
+            }
+        });
+    </script>
+</body>
+</html>

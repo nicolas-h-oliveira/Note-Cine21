@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin — Note Cine</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="theme.css">
+    <style>
+        body { padding: 32px 20px; }
+        .admin-container { max-width: 1200px; margin: 0 auto; }
+        .admin-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 16px;
+            flex-wrap: wrap;
+            margin-bottom: 28px;
+            background: var(--nc-surface);
+            padding: 20px 24px;
+            border-radius: 12px;
+            border-left: 4px solid var(--nc-gold);
+            border: 1px solid var(--nc-border);
+        }
+        .table-wrapper { background: var(--nc-surface); border-radius: 12px; border: 1px solid var(--nc-border); overflow: hidden; }
+        table { width: 100%; border-collapse: collapse; }
+        th, td { padding: 16px; font-size: 13px; text-align: left; }
+        th { background: var(--nc-surface-2); color: var(--nc-blue); font-weight: 800; text-transform: uppercase; font-size: 11px; letter-spacing: 0.5px; }
+        td { border-top: 1px solid var(--nc-border); color: var(--nc-grey); vertical-align: middle; }
+        tr:hover td { background: rgba(29, 161, 242, 0.06); color: var(--nc-white); }
+        td select { width: 100%; background: var(--nc-bg); color: var(--nc-white); border: 1px solid var(--nc-border); padding: 8px; border-radius: 8px; }
+        .btn-save { width: 100%; background: rgba(245, 197, 66, 0.15); color: var(--nc-gold); border: 1px solid rgba(245, 197, 66, 0.4); padding: 10px; border-radius: 8px; cursor: pointer; font-weight: 800; }
+        .btn-save:hover { background: var(--nc-gold); color: #1a1400; }
+    </style>
+</head>
+<body>
+
+    <div class="admin-container">
+        <div class="admin-header">
+            <h1 style="font-size:22px;display:flex;align-items:center;gap:10px;"><i class="fa-solid fa-screwdriver-wrench" style="color:var(--nc-gold);"></i> Painel Admin — Note Cine</h1>
+            <button type="button" class="nav-back" onclick="goBack()"><i class="fa-solid fa-arrow-left"></i> Voltar</button>
+        </div>
+
+        <div class="table-wrapper">
+            <table>
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Usuário</th>
+                        <th>E-mail</th>
+                        <th>Plano (role)</th>
+                        <th>Status</th>
+                        <th>Ações</th>
+                    </tr>
+                </thead>
+                <tbody id="users-table"></tbody>
+            </table>
+        </div>
+    </div>
+
+    <script src="js/config.js"></script>
+    <script>
+        const user = JSON.parse(localStorage.getItem('cineaura_user') || '{}');
+        if (user.role !== 'admin') {
+            alert('Acesso negado.');
+            window.location.href = 'index.html';
+        }
+
+        async function loadUsers() {
+            const formData = new FormData();
+            formData.append('action', 'get_users');
+            const res = await fetch('api.php', { method: 'POST', body: formData });
+            const data = await res.json();
+
+            if (!data.success) return;
+
+            const tbody = document.getElementById('users-table');
+            tbody.innerHTML = '';
+            data.users.forEach(u => {
+                tbody.innerHTML += `
+                    <tr>
+                        <td>#${u.id}</td>
+                        <td><strong>${u.username}</strong></td>
+                        <td>${u.email}</td>
+                        <td>
+                            <select id="role-${u.id}">
+                                <option value="user" ${u.role === 'user' ? 'selected' : ''}>Visitante (5 filmes)</option>
+                                <option value="nitro" ${u.role === 'nitro' ? 'selected' : ''}>Membro Plus (7 filmes)</option>
+                                <option value="cinefilo" ${u.role === 'cinefilo' || u.role === 'vip' ? 'selected' : ''}>Cinéfilo (10 filmes)</option>
+                                <option value="admin" ${u.role === 'admin' ? 'selected' : ''}>Administrador</option>
+                            </select>
+                        </td>
+                        <td>
+                            <select id="status-${u.id}">
+                                <option value="pending" ${u.status === 'pending' ? 'selected' : ''}>Pendente</option>
+                                <option value="approved" ${u.status === 'approved' ? 'selected' : ''}>Aprovado</option>
+                            </select>
+                        </td>
+                        <td><button type="button" class="btn-save" onclick="saveUser(${u.id})"><i class="fa-solid fa-check"></i> Salvar</button></td>
+                    </tr>
+                `;
+            });
+        }
+
+        async function saveUser(id) {
+            const role = document.getElementById(`role-${id}`).value;
+            const status = document.getElementById(`status-${id}`).value;
+
+            const formData = new FormData();
+            formData.append('action', 'update_user');
+            formData.append('id', id);
+            formData.append('role', role);
+            formData.append('status', status);
+
+            const res = await fetch('api.php', { method: 'POST', body: formData });
+            const data = await res.json();
+            if (data.success) {
+                alert('Usuário atualizado.');
+                const loggedInUser = JSON.parse(localStorage.getItem('cineaura_user') || '{}');
+                if (parseInt(loggedInUser.id) === parseInt(id)) {
+                    loggedInUser.role = role;
+                    localStorage.setItem('cineaura_user', JSON.stringify(loggedInUser));
+                }
+            } else {
+                alert('Erro: ' + data.message);
+            }
+        }
+
+        loadUsers();
+    </script>
+</body>
+</html>

@@ -1,0 +1,63 @@
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { background-color: #08090d; color: #fff; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; min-height: 100vh; }
+
+/* SPLASH SCREEN */
+#splash-screen {
+    position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+    background: #050608; display: flex; justify-content: center; align-items: center;
+    z-index: 9999; transition: opacity 0.5s ease, visibility 0.5s ease;
+}
+#splash-screen .splash-logo {
+    font-size: 38px; font-weight: 900; color: #00a8ff; display: flex; align-items: center; gap: 12px; letter-spacing: 2px;
+    animation: pulse 1.5s infinite alternate;
+}
+@keyframes pulse {
+    0% { transform: scale(0.98); opacity: 0.8; }
+    100% { transform: scale(1.05); opacity: 1; }
+}
+
+/* HEADER */
+header { padding: 20px 40px; background: #0f1017; border-bottom: 1px solid #1c1e2d; display: flex; justify-content: space-between; align-items: center; }
+.nav-back, .logo-link { color: #00a8ff; text-decoration: none; font-weight: bold; font-size: 16px; display: flex; align-items: center; gap: 8px; transition: 0.3s; }
+.nav-back:hover, .logo-link:hover { color: #33beff; }
+
+/* CONTAINER & PERFIL CARD */
+.container { max-width: 1000px; margin: 30px auto; padding: 0 20px; }
+.profile-card {
+    background: #12141d; border: 1px solid #1c1e2d; border-radius: 16px; padding: 25px;
+    display: flex; justify-content: space-between; align-items: center; margin-bottom: 35px;
+}
+.user-info { display: flex; align-items: center; gap: 20px; }
+.avatar { width: 80px; height: 80px; border-radius: 50%; background: #1a1d2b; border: 3px solid #00a8ff; display: flex; justify-content: center; align-items: center; font-size: 32px; font-weight: bold; }
+.role-badge { background: rgba(0, 168, 255, 0.15); color: #00a8ff; border: 1px solid #00a8ff; padding: 3px 10px; border-radius: 12px; font-size: 11px; font-weight: bold; }
+.bio { font-size: 13px; color: #888; margin-top: 6px; font-style: italic; }
+.btn-edit { background: #1c1e2d; color: #fff; border: 1px solid #2d3045; padding: 10px 18px; border-radius: 8px; cursor: pointer; font-weight: bold; font-size: 13px; transition: 0.3s; }
+.btn-edit:hover { background: #00a8ff; border-color: #00a8ff; }
+
+/* SLOTS GRID */
+.section-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; border-bottom: 1px solid #1c1e2d; padding-bottom: 10px; }
+.section-title { font-size: 18px; font-weight: bold; color: #00a8ff; display: flex; align-items: center; gap: 10px; }
+.slots-grid { display: flex; flex-wrap: wrap; justify-content: center; gap: 15px; margin-bottom: 40px; }
+.slot-card {
+    width: 140px; height: 200px; background: #10121a; border: 2px dashed #222538; border-radius: 12px;
+    display: flex; flex-direction: column; justify-content: center; align-items: center; cursor: pointer; transition: 0.3s; position: relative; overflow: hidden;
+}
+.slot-card:hover { border-color: #00a8ff; background: #151824; transform: translateY(-3px); }
+.slot-card i { font-size: 24px; color: #444; margin-bottom: 8px; }
+.slot-card span { font-size: 11px; color: #666; font-weight: 600; }
+.slot-card.filled { border-style: solid; border-color: #1c1e2d; }
+.slot-card img { width: 100%; height: 100%; object-fit: cover; }
+.slot-card .remove-btn { position: absolute; top: 6px; right: 6px; background: rgba(0,0,0,0.8); color: #ff4d4d; border: none; width: 24px; height: 24px; border-radius: 50%; cursor: pointer; display: none; }
+.slot-card.filled:hover .remove-btn { display: flex; justify-content: center; align-items: center; }
+
+/* MODAL */
+.modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85); display: none; justify-content: center; align-items: center; z-index: 10000; }
+.modal-box { background: #12141d; border: 1px solid #222538; border-radius: 16px; padding: 25px; width: 90%; max-width: 550px; }
+.modal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
+.modal-header h3 { color: #00a8ff; font-size: 18px; }
+.close-modal { background: none; border: none; color: #888; font-size: 20px; cursor: pointer; }
+.quick-actors-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; max-height: 300px; overflow-y: auto; }
+.actor-option { background: #181b28; border: 1px solid #282c40; border-radius: 8px; padding: 8px; text-align: center; cursor: pointer; transition: 0.2s; }
+.actor-option:hover { border-color: #00a8ff; background: #202436; }
+.actor-option img { width: 100%; height: 90px; object-fit: cover; border-radius: 6px; margin-bottom: 5px; }
+.actor-option p { font-size: 10px; color: #ccc; font-weight: bold; }
