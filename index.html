@@ -97,6 +97,11 @@
                 // Inicializa o ícone
                 updateThemeIcon();
             }
+
+            // Ativa a busca do cabeçalho
+            if (typeof setupSearch === 'function') {
+                setupSearch();
+            }
         });
     </script>
 </body>

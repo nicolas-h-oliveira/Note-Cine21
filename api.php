@@ -1,20 +1,152 @@
 <?php
-ini_set('display_errors', 0);
-session_start();
+/**
+ * API do Note Cine.
+ *
+ * Regras importantes:
+ *  - A resposta SEMPRE sai em JSON (nunca HTML de erro), senão o front cai no
+ *    "Erro de conexão" mesmo com o servidor funcionando.
+ *  - O sistema precisa funcionar tanto em http://localhost quanto em
+ *    http://IP-DO-SERVIDOR (acesso por outra máquina na rede).
+ */
+
+// Erros vão para o log do Apache, nunca para o corpo da resposta (quebraria o JSON).
+ini_set('display_errors', '0');
+ini_set('log_errors', '1');
+error_reporting(E_ALL);
+
+define('APP_ROOT', __DIR__);
+define('DB_HOST', '127.0.0.1');
+define('DB_NAME', 'filmezim');
+define('DB_USER', 'root');
+define('DB_PASS', '');
+define('DB_CHARSET', 'utf8mb4');
+
+/**
+ * Envia uma resposta JSON e encerra o script.
+ */
+function apiRespond(array $payload, int $status = 200)
+{
+    if (!headers_sent()) {
+        http_response_code($status);
+        header('Content-Type: application/json; charset=utf-8');
+        header('X-Content-Type-Options: nosniff');
+    }
+    echo json_encode($payload, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
+    exit;
+}
+
+function apiFail(string $message, int $status = 200, array $extra = [])
+{
+    apiRespond(array_merge(['success' => false, 'message' => $message], $extra), $status);
+}
+
+function apiOk(array $payload = [])
+{
+    apiRespond(array_merge(['success' => true], $payload));
+}
+
+// Qualquer erro não tratado vira JSON (antes virava um HTML 500 e o JS quebrava).
+set_exception_handler(function (Throwable $e) {
+    error_log('[api.php] ' . $e->getMessage() . ' @ ' . $e->getFile() . ':' . $e->getLine());
+    apiFail('Erro interno no servidor: ' . $e->getMessage(), 500);
+});
+
+// ------------------------------------------------------------------
+// Cabeçalhos de rede (necessário para acessar via IP de outra máquina)
+// ------------------------------------------------------------------
+$isHttps = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off')
+    || (int)($_SERVER['SERVER_PORT'] ?? 0) === 443
+    || strtolower($_SERVER['HTTP_X_FORWARDED_PROTO'] ?? '') === 'https';
 
 header('Content-Type: application/json; charset=utf-8');
+header('X-Content-Type-Options: nosniff');
+header('Cache-Control: no-store, no-cache, must-revalidate, max-age=0');
+header('Referrer-Policy: same-origin');
 
-$host = '127.0.0.1';
-$dbname = 'filmezim';
-$user = 'root';
-$pass = '';
+/**
+ * Libera o acesso para a própria origem e para endereços privados/local
+ * (192.168.x.x, 10.x.x.x, 172.16-31.x.x, localhost). Origens da internet
+ * aberta continuam bloqueadas.
+ */
+function isLocalOrigin(?string $origin): bool
+{
+    if (!$origin) {
+        return false;
+    }
+    $host = parse_url($origin, PHP_URL_HOST);
+    if (!$host) {
+        return false;
+    }
+    if (in_array(strtolower($host), ['localhost', '127.0.0.1', '::1', '0.0.0.0'], true)) {
+        return true;
+    }
+    if (filter_var($host, FILTER_VALIDATE_IP, FILTER_FLAG_IPV4)) {
+        return filter_var(
+            $host,
+            FILTER_VALIDATE_IP,
+            FILTER_FLAG_NO_PRIV_RANGE | FILTER_FLAG_NO_RES_RANGE
+        ) === false;
+    }
+    return false;
+}
 
-try {
-    $pdo = new PDO("mysql:host=$host;dbname=$dbname;charset=utf8mb4", $user, $pass);
-    $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
-} catch (PDOException $e) {
-    echo json_encode(['success' => false, 'message' => 'Erro crítico: Falha ao conectar no banco de dados filmezim.']);
+$origin = $_SERVER['HTTP_ORIGIN'] ?? '';
+if ($origin !== '') {
+    header('Vary: Origin');
+    if (isLocalOrigin($origin)) {
+        header('Access-Control-Allow-Origin: ' . $origin);
+        header('Access-Control-Allow-Credentials: true');
+    }
+}
+header('Access-Control-Allow-Methods: GET, POST, OPTIONS');
+header('Access-Control-Allow-Headers: Content-Type, X-Requested-With, Accept, Origin, Authorization');
+header('Access-Control-Max-Age: 86400');
+
+// Preflight
+if (($_SERVER['REQUEST_METHOD'] ?? '') === 'OPTIONS') {
+    http_response_code(204);
     exit;
+}
+
+// ------------------------------------------------------------------
+// Sessão (cookie com path "/" para valer em qualquer página do projeto)
+// ------------------------------------------------------------------
+session_set_cookie_params([
+    'lifetime' => 0,
+    'path'     => '/',
+    'domain'   => '',
+    'secure'   => $isHttps,
+    'httponly' => true,
+    'samesite' => 'Lax',
+]);
+if (session_status() === PHP_SESSION_NONE) {
+    if (!@session_start()) {
+        error_log('[api.php] falha ao iniciar a sessão');
+        apiFail('Não foi possível iniciar a sessão no servidor.', 500);
+    }
+}
+
+// ------------------------------------------------------------------
+// Banco de dados
+// ------------------------------------------------------------------
+try {
+    $dsn = sprintf('mysql:host=%s;dbname=%s;charset=%s', DB_HOST, DB_NAME, DB_CHARSET);
+    $pdo = new PDO($dsn, DB_USER, DB_PASS, [
+        PDO::ATTR_ERRMODE            => PDO::ERRMODE_EXCEPTION,
+        PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,
+        PDO::ATTR_EMULATE_PREPARES   => false,
+    ]);
+} catch (PDOException $e) {
+    error_log('[api.php] falha de conexão com o banco: ' . $e->getMessage());
+    apiFail(
+        'Erro crítico: falha ao conectar no banco de dados ' . DB_NAME . '. Detalhe: ' . $e->getMessage(),
+        500
+    );
+}
+
+// Garante que a pasta de uploads exista (usada no avatar/banner do perfil).
+if (!is_dir(APP_ROOT . '/uploads')) {
+    @mkdir(APP_ROOT . '/uploads', 0755, true);
 }
 
 // Suporte para JSON vindo no corpo da requisição (fetch)
@@ -401,15 +533,35 @@ if ($action === 'save_decor') {
     $banner_url = $uploadResult ? $uploadResult['url'] : null;
     $banner_type = ($uploadResult && $uploadResult['ext'] === 'gif') ? 'gif' : 'image';
 
+    // O modal de decoração também permite trocar a foto de perfil.
+    $avatarResult = validateAndUploadFile('avatar', 'avatar', $userId);
+    $avatar_url = $avatarResult ? $avatarResult['url'] : null;
+
+    $sets = ['avatar_frame = ?', 'profile_effect = ?', 'accent_color = ?'];
+    $values = [$frame, $effect, $accent];
+
     if ($banner_url !== null) {
-        $stmt = $pdo->prepare("UPDATE users SET avatar_frame = ?, profile_effect = ?, accent_color = ?, banner_url = ?, banner_type = ? WHERE id = ?");
-        $stmt->execute([$frame, $effect, $accent, $banner_url, $banner_type, $userId]);
-    } else {
-        $stmt = $pdo->prepare("UPDATE users SET avatar_frame = ?, profile_effect = ?, accent_color = ? WHERE id = ?");
-        $stmt->execute([$frame, $effect, $accent, $userId]);
+        $sets[] = 'banner_url = ?';
+        $sets[] = 'banner_type = ?';
+        $values[] = $banner_url;
+        $values[] = $banner_type;
     }
 
-    echo json_encode(['success' => true, 'message' => 'Decorações salvas com sucesso.']);
+    if ($avatar_url !== null) {
+        $sets[] = 'avatar_url = ?';
+        $values[] = $avatar_url;
+    }
+
+    $values[] = $userId;
+
+    $stmt = $pdo->prepare('UPDATE users SET ' . implode(', ', $sets) . ' WHERE id = ?');
+    $stmt->execute($values);
+
+    $response = ['success' => true, 'message' => 'Decorações salvas com sucesso.'];
+    if ($avatar_url !== null) {
+        $response['avatar'] = $avatar_url;
+    }
+    echo json_encode($response);
     exit;
 }
 

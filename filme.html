@@ -332,7 +332,7 @@
 
             if (reviewId) {
                 const reviews = await Storage.getReviews();
-                const review = reviews.find(r => r.id === reviewId);
+                const review = reviews.find(r => String(r.id) === String(reviewId));
                 if (review && review.username === currentUser.username) {
                     document.getElementById('review-title').value = review.title;
                     document.getElementById('review-text').value = review.text;

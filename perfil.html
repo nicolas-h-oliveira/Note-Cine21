@@ -742,22 +742,29 @@
             const rawMovies = localProfileData.movies || [];
             const profileMovies = filterProfileMoviesOnly(rawMovies);
 
-            const unpositionedMovies = profileMovies.filter(m => m.slot_position === null || m.slot_position === undefined);
-
             const userPlan = NoteCinePlans.getPlan(localProfileData.user.role);
             const totalSlots = userPlan.unlimited ? Math.max(profileMovies.length + 1, 5) : userPlan.maxSlots;
 
-            let unpositionedIdx = 0;
+            // O api.php distribui slot_position começando em 1. Slots fora dessa
+            // faixa (ex.: 0 em registros antigos ou null) entram como "sem posição".
+            const inRange = (m) => {
+                const p = parseInt(m.slot_position, 10);
+                return Number.isInteger(p) && p >= 1 && p <= totalSlots;
+            };
+            const positioned = profileMovies.filter(inRange);
+            const unpositioned = profileMovies.filter(m => !inRange(m));
 
-            for (let i = 0; i < totalSlots; i++) {
-                let movie = profileMovies.find(m => m.slot_position !== null && m.slot_position !== undefined && parseInt(m.slot_position) === i);
+            const used = new Set();
 
-                if (!movie && unpositionedIdx < unpositionedMovies.length) {
-                    movie = unpositionedMovies[unpositionedIdx];
-                    unpositionedIdx++;
+            for (let slot = 1; slot <= totalSlots; slot++) {
+                let movie = positioned.find(m => parseInt(m.slot_position, 10) === slot && !used.has(m));
+
+                if (!movie && unpositioned.length) {
+                    movie = unpositioned.find(m => !used.has(m));
                 }
 
                 if (movie) {
+                    used.add(movie);
                     const posterUrlToUse = typeof normalizePosterUrl === 'function' ? normalizePosterUrl(movie) : (movie.poster || movie.poster_url);
                     const card = document.createElement('div');
                     card.className = 'slot-card filled';
@@ -806,7 +813,7 @@
                     const card = document.createElement('div');
                     card.className = 'slot-card filled';
                     card.style.backgroundImage = `url(${char.image_url})`;
-                    card.innerHTML = `<div class="overlay"><h4>${char.character_name}</h4><p>${char.work_origin}</p></div>`;
+                    card.innerHTML = `<div class="overlay"><h4>${esc(char.character_name)}</h4><p>${esc(char.work_origin)}</p></div>`;
                     if (isOwnProfile) {
                         card.onclick = () => { openCharModal(i, char); };
                     }

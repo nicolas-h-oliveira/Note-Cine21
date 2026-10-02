@@ -104,10 +104,9 @@ const Storage = (() => {
             console.error('Erro ao checar status do filme:', e);
         }
 
-        return {
-            isFavorite: false,
-            inProfile: false
-        };
+        // null = servidor inacessível. Não assumir "não está favoritado/no perfil",
+        // senão o botão manda a ação errada quando a rede falha.
+        return null;
     }
 
     async function getFavorites(username = '') {
@@ -217,12 +216,12 @@ const Storage = (() => {
 
     async function isFavorite(id, type = 'movie') {
         const status = await checkMovieStatus(id, type);
-        return status.isFavorite;
+        return !!(status && status.isFavorite);
     }
 
     async function isInProfile(id, type = 'movie') {
         const status = await checkMovieStatus(id, type);
-        return status.inProfile;
+        return !!(status && status.inProfile);
     }
 
     // ============================================================
@@ -367,10 +366,21 @@ const Storage = (() => {
             parsed.media_type
         );
 
-        const actionName =
-            status.inProfile
-                ? 'remove_top_movie'
-                : 'add_top_movie';
+        if (!status) {
+            const msg = 'Não foi possível falar com o servidor. Confira o XAMPP/MySQL e tente de novo.';
+
+            alert(msg);
+
+            return {
+                ok: false,
+                msg
+            };
+        }
+
+        const isAdding = !status.inProfile;
+        const actionName = isAdding
+            ? 'add_top_movie'
+            : 'remove_top_movie';
 
         const formData = new FormData();
 
@@ -425,7 +435,7 @@ const Storage = (() => {
 
             return {
                 ok: data.success,
-                added: !status.inProfile,
+                added: isAdding,
                 msg: data.message
             };
 

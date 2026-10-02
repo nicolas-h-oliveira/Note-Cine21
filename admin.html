@@ -60,28 +60,55 @@
 
     <script src="js/config.js"></script>
     <script>
-        const user = JSON.parse(localStorage.getItem('cineaura_user') || '{}');
-        if (user.role !== 'admin') {
-            alert('Acesso negado.');
-            window.location.href = 'index.html';
+        let user = {};
+        try {
+            user = JSON.parse(localStorage.getItem(NOTE_CINE.STORAGE_USER) || '{}');
+        } catch (e) {
+            user = {};
+        }
+
+        // A proteção real é o requireAdmin() no api.php; isto aqui é só a UI.
+        if (!user.id || user.role !== 'admin') {
+            document.getElementById('users-table').innerHTML =
+                '<tr><td colspan="6">Acesso negado. Faça login como administrador.</td></tr>';
+        } else {
+            loadUsers();
+        }
+
+        function adminError(msg) {
+            console.error(msg);
+            const tbody = document.getElementById('users-table');
+            tbody.innerHTML = `<tr><td colspan="6">${msg}</td></tr>`;
+        }
+
+        function esc(value) {
+            return String(value ?? '').replace(/[&<>"']/g, c => ({
+                '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
+            }[c]));
         }
 
         async function loadUsers() {
-            const formData = new FormData();
-            formData.append('action', 'get_users');
-            const res = await fetch('api.php', { method: 'POST', body: formData });
-            const data = await res.json();
+            try {
+                const formData = new FormData();
+                formData.append('action', 'get_users');
 
-            if (!data.success) return;
+                const res = await fetch('api.php', { method: 'POST', body: formData });
+                if (!res.ok) throw new Error(`HTTP ${res.status}`);
+                const data = await res.json();
 
-            const tbody = document.getElementById('users-table');
-            tbody.innerHTML = '';
-            data.users.forEach(u => {
-                tbody.innerHTML += `
+                if (!data.success) {
+                    adminError(data.message || 'Não foi possível carregar os usuários.');
+                    return;
+                }
+
+                const tbody = document.getElementById('users-table');
+                tbody.innerHTML = '';
+                data.users.forEach(u => {
+                    tbody.innerHTML += `
                     <tr>
                         <td>#${u.id}</td>
-                        <td><strong>${u.username}</strong></td>
-                        <td>${u.email}</td>
+                        <td><strong>${esc(u.username)}</strong></td>
+                        <td>${esc(u.email)}</td>
                         <td>
                             <select id="role-${u.id}">
                                 <option value="user" ${u.role === 'user' ? 'selected' : ''}>Visitante (5 filmes)</option>
@@ -99,7 +126,11 @@
                         <td><button type="button" class="btn-save" onclick="saveUser(${u.id})"><i class="fa-solid fa-check"></i> Salvar</button></td>
                     </tr>
                 `;
-            });
+                });
+            } catch (error) {
+                adminError('Erro de conexão com o servidor (api.php). O XAMPP/MySQL está rodando?');
+                console.error(error);
+            }
         }
 
         async function saveUser(id) {
@@ -112,21 +143,25 @@
             formData.append('role', role);
             formData.append('status', status);
 
-            const res = await fetch('api.php', { method: 'POST', body: formData });
-            const data = await res.json();
-            if (data.success) {
-                alert('Usuário atualizado.');
-                const loggedInUser = JSON.parse(localStorage.getItem('cineaura_user') || '{}');
-                if (parseInt(loggedInUser.id) === parseInt(id)) {
-                    loggedInUser.role = role;
-                    localStorage.setItem('cineaura_user', JSON.stringify(loggedInUser));
+            try {
+                const res = await fetch('api.php', { method: 'POST', body: formData });
+                if (!res.ok) throw new Error(`HTTP ${res.status}`);
+                const data = await res.json();
+
+                if (data.success) {
+                    alert('Usuário atualizado.');
+                    if (parseInt(user.id) === parseInt(id)) {
+                        user.role = role;
+                        localStorage.setItem(NOTE_CINE.STORAGE_USER, JSON.stringify(user));
+                    }
+                } else {
+                    alert('Erro: ' + data.message);
                 }
-            } else {
-                alert('Erro: ' + data.message);
+            } catch (error) {
+                console.error(error);
+                alert('Erro de conexão com o servidor (api.php).');
             }
         }
-
-        loadUsers();
     </script>
 </body>
 </html>
